@@ -2,6 +2,36 @@
 #include <mfvirtualcamera.h>
 #include <combaseapi.h>
 
+// Source - https://stackoverflow.com/a/17387176
+// Posted by Jamin Grey, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-02-03, License - CC BY-SA 4.0 - Tweaked by Joshua Freudenhammer to handle this one usecase
+
+//Returns the last Win32 error, in string format. Returns an empty string if there is no error.
+std::string GetLastErrorAsString(DWORD err = 0)
+{
+    //Get the error message ID, if any.
+    DWORD errorMessageID = ::GetLastError();
+    if(errorMessageID == 0) {
+        errorMessageID = err;
+    }
+
+    LPSTR messageBuffer = nullptr;
+
+    //Ask Win32 to give us the string version of that message ID.
+    //The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+    //Copy the error message into a std::string.
+    std::string message(messageBuffer, size);
+
+    //Free the Win32's string's buffer.
+    LocalFree(messageBuffer);
+
+    return message;
+}
+
+
 class VirtualCamera {
 public:
     VirtualCamera() {
@@ -28,15 +58,9 @@ public:
         if FAILED(hr) {
             std::cerr << "Failed to create Virtual Camera: ";
 
-            switch(hr) {
-                case E_INVALIDARG: std::cerr << "Invalid Argument"; break;
-                case E_OUTOFMEMORY: std::cerr << "Out of memory"; break;
-                case E_POINTER: std::cerr << "Invalid pointer"; break;
-                case E_ACCESSDENIED: std::cerr << "Access Denied"; break;
-                default: std::cerr << hr;
-            }
+            std::string error_string = GetLastErrorAsString(hr);
+            std::cerr << error_string << std::endl;
 
-            std::cerr << std::endl;
             exit(hr);
         }
 

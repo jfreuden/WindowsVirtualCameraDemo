@@ -7,14 +7,8 @@
 // Retrieved 2026-02-03, License - CC BY-SA 4.0 - Tweaked by Joshua Freudenhammer to handle this one usecase
 
 //Returns the last Win32 error, in string format. Returns an empty string if there is no error.
-std::string GetLastErrorAsString(DWORD err = 0)
+std::string GetLastErrorAsString(DWORD errorMessageID = 0)
 {
-    //Get the error message ID, if any.
-    DWORD errorMessageID = ::GetLastError();
-    if(errorMessageID == 0) {
-        errorMessageID = err;
-    }
-
     LPSTR messageBuffer = nullptr;
 
     //Ask Win32 to give us the string version of that message ID.
@@ -35,8 +29,11 @@ std::string GetLastErrorAsString(DWORD err = 0)
 class VirtualCamera {
 public:
     VirtualCamera() {
-
         LPOLESTR clsid;
+
+        if (const HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED); FAILED(hr)) {
+            std::cerr << "Failed to initialize COM: " << GetLastErrorAsString(hr) << std::endl;
+        }
 
         if (const HRESULT hr = StringFromCLSID(GetGUID(), &clsid); FAILED(hr)) {
             std::cerr << "Failed to create GUID: " << hr << std::endl;
@@ -71,7 +68,7 @@ public:
     }
 
 private:
-    IMFVirtualCamera* camera;
+    IMFVirtualCamera* camera {};
 
     static GUID GetGUID() {
         GUID guid;

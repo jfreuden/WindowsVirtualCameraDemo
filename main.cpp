@@ -1,6 +1,10 @@
+#include <chrono>
 #include <iostream>
 #include <mfvirtualcamera.h>
 #include <combaseapi.h>
+#include <thread>
+
+#include "../../AppData/Local/Programs/CLion/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/c++/bits/this_thread_sleep.h"
 
 // Source - https://stackoverflow.com/a/17387176
 // Posted by Jamin Grey, modified by community. See post 'Timeline' for change history
@@ -64,7 +68,33 @@ public:
         CoTaskMemFree(clsid);
     }
 
+
+
+    IMFMediaSource* Start() {
+        auto callback = nullptr; // TODO: Make a callback for statuses
+
+        if (!camera) {
+            std::cerr << "This shouldn't happen: null Camera pointer had Start called on it" << std::endl;
+        }
+
+        camera->Start(callback);
+
+        IMFMediaSource* media_source;
+        HRESULT hr = camera->GetMediaSource(&media_source);
+        if (FAILED(hr)) {
+            std::cerr << "Failed to get Media Source: " << hr << std::endl;
+            exit(hr);
+        }
+        return media_source;
+    }
+
     void Dispose() {
+        if (camera) {
+            camera->Stop();
+            camera->Remove();
+            camera->Shutdown();
+            camera = nullptr;
+        }
     }
 
 private:
@@ -86,9 +116,15 @@ int main() {
     std::cout << "Beginning virtual camera demonstration" << std::endl;
     auto bob = VirtualCamera();
 
+    bob.Start();
 
+    std::cout << "Initialized!" << std::endl << "Looping..." << std::endl;
 
-    std::cout << "Hello, World!" << std::endl;
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
+
+    bob.Dispose();
     return 0;
 }
 

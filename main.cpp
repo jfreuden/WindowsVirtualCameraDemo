@@ -26,7 +26,17 @@ public:
         );
 
         if FAILED(hr) {
-            std::cerr << "Failed to create Virtual Camera: " << hr << std::endl;
+            std::cerr << "Failed to create Virtual Camera: ";
+
+            switch(hr) {
+                case E_INVALIDARG: std::cerr << "Invalid Argument"; break;
+                case E_OUTOFMEMORY: std::cerr << "Out of memory"; break;
+                case E_POINTER: std::cerr << "Invalid pointer"; break;
+                case E_ACCESSDENIED: std::cerr << "Access Denied"; break;
+                default: std::cerr << hr;
+            }
+
+            std::cerr << std::endl;
             exit(hr);
         }
 

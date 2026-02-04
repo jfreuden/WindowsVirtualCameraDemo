@@ -82,7 +82,9 @@ public:
         IMFMediaSource* media_source;
         HRESULT hr = camera->GetMediaSource(&media_source);
         if (FAILED(hr)) {
-            std::cerr << "Failed to get Media Source: " << hr << std::endl;
+            std::cerr << "Failed to get Media Source: ";
+            std::string error_string = GetLastErrorAsString(hr);
+            std::cerr << error_string << std::endl;
             exit(hr);
         }
         return media_source;
